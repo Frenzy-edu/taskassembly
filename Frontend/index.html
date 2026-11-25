@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A simple task manager for keeping work organized.">
+    <title>My Tasks · Task Manager</title>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <a class="sidebar-brand" href="/" aria-label="Task Manager home">
+                <span class="sidebar-brand-icon"><i class="bi bi-check2-square" aria-hidden="true"></i></span>
+                <span>Task Manager</span>
+            </a>
+
+            <p class="sidebar-label">Workspace</p>
+            <nav class="nav flex-column sidebar-nav" aria-label="Main navigation">
+                <a class="nav-link active" href="/" aria-current="page">
+                    <i class="bi bi-list-task" aria-hidden="true"></i>
+                    <span>My Tasks</span>
+                </a>
+            </nav>
+        </aside>
+
+        <div class="app-main">
+            <header class="topbar">
+                <span class="topbar-context">My workspace</span>
+                <div class="topbar-user">
+                    <span class="topbar-avatar" aria-hidden="true"><i class="bi bi-person"></i></span>
+                    <span>Personal workspace</span>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <div class="page-heading">
+                    <div>
+                        <p class="page-eyebrow">Overview</p>
+                        <h1>My Tasks</h1>
+                        <p>Manage your tasks and keep your day on track.</p>
+                    </div>
+                    <button class="btn btn-primary" id="addTaskButton" type="button">
+                        <i class="bi bi-plus-lg mr-1" aria-hidden="true"></i>
+                        Add Task
+                    </button>
+                </div>
+
+                <div class="row mb-4" id="statistics">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="card stat-card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div>
+                                    <p class="stat-label">Total tasks</p>
+                                    <p class="stat-value" data-stat="total">0</p>
+                                </div>
+                                <span class="stat-icon stat-icon-blue" aria-hidden="true"><i class="bi bi-list-task"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="card stat-card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div>
+                                    <p class="stat-label">Pending</p>
+                                    <p class="stat-value" data-stat="pending">0</p>
+                                </div>
+                                <span class="stat-icon stat-icon-amber" aria-hidden="true"><i class="bi bi-hourglass-split"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card stat-card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div>
+                                    <p class="stat-label">Completed</p>
+                                    <p class="stat-value" data-stat="completed">0</p>
+                                </div>
+                                <span class="stat-icon stat-icon-green" aria-hidden="true"><i class="bi bi-check-circle"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="card task-panel shadow-sm" aria-labelledby="task-list-heading">
+                    <div class="task-panel-header">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between">
+                            <h2 id="task-list-heading" class="mb-3 mb-lg-0">Task list</h2>
+                            <form class="filter-form" id="filterForm" role="search">
+                                <label class="sr-only" for="searchInput">Search task titles</label>
+                                <div class="input-group filter-search">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white">
+                                            <i class="bi bi-search text-muted" aria-hidden="true"></i>
+                                        </span>
+                                    </div>
+                                    <input
+                                        class="form-control border-left-0"
+                                        id="searchInput"
+                                        type="search"
+                                        maxlength="255"
+                                        placeholder="Search tasks..."
+                                    >
+                                </div>
+
+                                <label class="sr-only" for="statusFilter">Filter by status</label>
+                                <select class="form-control filter-status" id="statusFilter">
+                                    <option value="">All statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-funnel mr-1" aria-hidden="true"></i>
+                                    Filter
+                                </button>
+                                <button class="btn btn-light d-none" id="clearFiltersButton" type="button">
+                                    Clear
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive d-none" id="taskTable">
+                        <table class="table task-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Task</th>
+                                    <th scope="col">Created</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="taskRows"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="empty-state d-none" id="emptyState" aria-live="polite">
+                        <div class="empty-state-icon"><i class="bi bi-clipboard2-check" aria-hidden="true"></i></div>
+                        <h3>No tasks yet</h3>
+                        <p class="mb-3">Create your first task to get started.</p>
+                        <button class="btn btn-primary" type="button" data-add-task>Add your first task</button>
+                    </div>
+
+                    <div class="empty-state" id="taskListMessage" role="status" aria-live="polite">
+                        Loading tasks...
+                    </div>
+
+                    <div class="pagination-footer">
+                        <p id="taskCountSummary">Loading tasks...</p>
+                        <nav aria-label="Task pages">
+                            <ul class="pagination" id="pagination"></ul>
+                        </nav>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="app-footer">Task Manager · Stay focused on what matters.</footer>
+        </div>
+    </div>
+
+    <div
+        class="modal fade"
+        id="taskModal"
+        tabindex="-1"
+        role="dialog"
+        aria-labelledby="taskModalTitle"
+        aria-hidden="true"
+    >
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <p class="modal-eyebrow">Task details</p>
+                        <h2 class="modal-title" id="taskModalTitle">Add a task</h2>
+                    </div>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <form id="taskForm">
+                    <input id="taskId" type="hidden">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="title">Task title <span class="required-indicator">*</span></label>
+                            <input
+                                class="form-control"
+                                id="title"
+                                type="text"
+                                maxlength="255"
+                                required
+                                aria-describedby="titleError"
+                            >
+                            <div class="invalid-feedback d-none" id="titleError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">
+                                Description <span class="text-muted font-weight-normal">(optional)</span>
+                            </label>
+                            <textarea class="form-control" id="description" rows="4" aria-describedby="descriptionError"></textarea>
+                            <div class="invalid-feedback d-none" id="descriptionError"></div>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <label for="status">Status <span class="required-indicator">*</span></label>
+                            <select class="form-control" id="status" required aria-describedby="statusError">
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                            <div class="invalid-feedback d-none" id="statusError"></div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-light" type="button" data-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" id="taskSubmitButton" type="submit">
+                            <i class="bi bi-check2-circle mr-1" aria-hidden="true"></i>
+                            Save Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
