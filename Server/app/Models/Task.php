@@ -13,6 +13,13 @@ class Task extends Model
 
     public const STATUS_COMPLETED = 'completed';
 
+    protected static function booted(): void
+    {
+        static::creating(function (Task $task): void {
+            $task->position = (static::query()->min('position') ?? 0) - 1;
+        });
+    }
+
     protected $fillable = [
         'title',
         'description',

@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import Swal from 'sweetalert2';
+import Sortable from 'sortablejs';
 import toastr from 'toastr';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -20,6 +21,7 @@ const elements = {
     emptyState: document.querySelector('#emptyState'),
     filterForm: document.querySelector('#filterForm'),
     pagination: document.querySelector('#pagination'),
+    reorderHelp: document.querySelector('#reorderHelp'),
     searchInput: document.querySelector('#searchInput'),
     status: document.querySelector('#status'),
     statusError: document.querySelector('#statusError'),
@@ -42,6 +44,8 @@ const state = {
     search: '',
     status: '',
     tasks: [],
+    isReordering: false,
+    sortable: null,
 };
 
 toastr.options = {
@@ -131,19 +135,31 @@ function renderTasks(tasks) {
         const description = task.description || 'No description provided.';
 
         return `
-            <tr>
+            <tr data-task-id="${Number(task.id)}">
                 <td>
-                    <div class="task-title">${escapeHtml(task.title)}</div>
-                    <p class="task-description">${escapeHtml(description)}</p>
+                    <div class="d-flex align-items-start">
+                        <button
+                            class="btn btn-link btn-sm task-drag-handle text-secondary p-0 mr-2"
+                            type="button"
+                            aria-label="Reorder ${escapeHtml(task.title)}. Use the arrow keys or drag to move."
+                            title="Drag to reorder"
+                        >
+                            <i class="bi bi-grip-vertical" aria-hidden="true"></i>
+                        </button>
+                        <div>
+                            <div class="task-title text-dark">${escapeHtml(task.title)}</div>
+                            <p class="task-description text-muted">${escapeHtml(description)}</p>
+                        </div>
+                    </div>
                 </td>
-                <td class="task-date">${escapeHtml(formatDate(task.created_at))}</td>
+                <td class="task-date text-secondary">${escapeHtml(formatDate(task.created_at))}</td>
                 <td>
                     <span class="badge badge-pill status-badge ${statusClass}">${statusLabel}</span>
                 </td>
                 <td>
                     <div class="task-actions">
                         <button
-                            class="btn btn-sm btn-outline-success"
+                            class="btn btn-sm btn-outline-secondary"
                             type="button"
                             data-action="status"
                             data-id="${Number(task.id)}"
@@ -154,7 +170,7 @@ function renderTasks(tasks) {
                             <i class="bi ${isCompleted ? 'bi-arrow-counterclockwise' : 'bi-check2'}" aria-hidden="true"></i>
                         </button>
                         <button
-                            class="btn btn-sm btn-outline-primary"
+                            class="btn btn-sm btn-outline-secondary"
                             type="button"
                             data-action="edit"
                             data-id="${Number(task.id)}"
@@ -164,7 +180,7 @@ function renderTasks(tasks) {
                             <i class="bi bi-pencil" aria-hidden="true"></i>
                         </button>
                         <button
-                            class="btn btn-sm btn-outline-danger"
+                            class="btn btn-sm btn-outline-secondary"
                             type="button"
                             data-action="delete"
                             data-id="${Number(task.id)}"
@@ -178,6 +194,10 @@ function renderTasks(tasks) {
             </tr>
         `;
     }).join('');
+
+    const isFiltered = state.search !== '' || state.status !== '';
+    elements.reorderHelp.classList.toggle('d-none', isFiltered);
+    state.sortable?.option('disabled', isFiltered || state.isReordering);
 }
 
 function renderPagination(meta) {
@@ -211,6 +231,9 @@ function renderPagination(meta) {
 
 async function loadTasks() {
     const parameters = new URLSearchParams({ page: String(state.page) });
+    const isFiltered = state.search !== '' || state.status !== '';
+
+    elements.reorderHelp.classList.toggle('d-none', isFiltered);
 
     if (state.search) {
         parameters.set('search', state.search);
@@ -225,6 +248,10 @@ async function loadTasks() {
     elements.emptyState.classList.add('d-none');
     elements.taskListMessage.textContent = 'Loading tasks...';
     elements.taskListMessage.classList.remove('d-none');
+    state.sortable?.option(
+        'disabled',
+        state.search !== '' || state.status !== '' || state.isReordering
+    );
 
     try {
         const response = await request(`/tasks?${parameters.toString()}`);
@@ -234,8 +261,6 @@ async function loadTasks() {
         elements.taskListMessage.classList.add('d-none');
 
         if (response.data.length === 0) {
-            const isFiltered = state.search !== '' || state.status !== '';
-
             elements.emptyState.querySelector('h3').textContent =
                 isFiltered ? 'No matching tasks' : 'No tasks yet';
             elements.emptyState.querySelector('p').textContent = isFiltered
@@ -367,7 +392,6 @@ async function deleteTask(task) {
         showCancelButton: true,
         confirmButtonText: 'Delete task',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#dc3545',
         reverseButtons: true,
         focusCancel: true,
     });
@@ -382,6 +406,37 @@ async function deleteTask(task) {
         await loadTasks();
     } catch (error) {
         showRequestError(error);
+    }
+}
+
+async function saveTaskOrder(focusTaskId = null) {
+    state.isReordering = true;
+    state.sortable.option('disabled', true);
+
+    const taskIds = Array.from(elements.taskRows.querySelectorAll('tr[data-task-id]'))
+        .map((row) => Number(row.dataset.taskId));
+
+    try {
+        await request('/tasks/reorder', {
+            method: 'PUT',
+            body: JSON.stringify({ task_ids: taskIds, page: state.page }),
+        });
+        toastr.success('Task order saved.');
+    } catch (error) {
+        showRequestError(error);
+    } finally {
+        await loadTasks();
+        state.isReordering = false;
+        state.sortable.option(
+            'disabled',
+            state.search !== '' || state.status !== ''
+        );
+
+        if (focusTaskId !== null) {
+            elements.taskRows
+                .querySelector(`[data-task-id="${focusTaskId}"] .task-drag-handle`)
+                ?.focus();
+        }
     }
 }
 
@@ -410,6 +465,20 @@ function handleTaskAction(event) {
 
 async function startApplication() {
     await import('bootstrap/dist/js/bootstrap.bundle.min.js');
+    state.sortable = Sortable.create(elements.taskRows, {
+        animation: 150,
+        draggable: 'tr[data-task-id]',
+        fallbackOnBody: true,
+        fallbackTolerance: 5,
+        forceFallback: true,
+        handle: '.task-drag-handle',
+        onEnd(event) {
+            if (event.oldIndex !== event.newIndex) {
+                saveTaskOrder();
+            }
+        },
+    });
+    state.sortable.option('disabled', true);
 
     $('#taskModal').on('shown.bs.modal', () => elements.taskTitle.focus());
 
@@ -421,6 +490,36 @@ async function startApplication() {
     });
     elements.taskForm.addEventListener('submit', saveTask);
     elements.taskRows.addEventListener('click', handleTaskAction);
+    elements.taskRows.addEventListener('keydown', (event) => {
+        const handle = event.target.closest('.task-drag-handle');
+        const row = handle?.closest('tr[data-task-id]');
+
+        if (
+            !row
+            || state.search !== ''
+            || state.status !== ''
+            || !['ArrowUp', 'ArrowDown'].includes(event.key)
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+        const neighbor = event.key === 'ArrowUp'
+            ? row.previousElementSibling
+            : row.nextElementSibling;
+
+        if (!neighbor) {
+            return;
+        }
+
+        if (event.key === 'ArrowUp') {
+            elements.taskRows.insertBefore(row, neighbor);
+        } else {
+            elements.taskRows.insertBefore(neighbor, row);
+        }
+
+        saveTaskOrder(Number(row.dataset.taskId));
+    });
     elements.filterForm.addEventListener('submit', (event) => {
         event.preventDefault();
         state.search = elements.searchInput.value.trim();

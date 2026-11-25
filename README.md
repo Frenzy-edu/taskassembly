@@ -15,6 +15,7 @@ The frontend communicates with the API at `http://127.0.0.1:8000/api`. Laravel a
 - Delete tasks after confirmation with SweetAlert2.
 - Change tasks between Pending and Completed.
 - Search by title, filter by status, and paginate results.
+- Drag tasks or use the keyboard handle to reorder items on the current unfiltered page.
 - See total, pending, and completed task counts.
 - Receive operation feedback through Toastr.
 - Validate task data in the Laravel API and display field errors in the frontend.
@@ -98,6 +99,7 @@ Composer is also available as a local PHAR in this workspace. If `composer` is n
 | `GET` | `/api/tasks/{id}` | View one task |
 | `PUT` | `/api/tasks/{id}` | Update a task |
 | `PATCH` | `/api/tasks/{id}/status` | Change task status |
+| `PUT` | `/api/tasks/reorder` | Save the order of tasks on a page |
 | `DELETE` | `/api/tasks/{id}` | Delete a task |
 
 Validation errors are returned as JSON with HTTP status `422`.
@@ -137,5 +139,5 @@ npm run build
 ## Assumptions
 
 - This is a single-user task list; authentication and task ownership are not required.
-- Task priority, due dates, staff assignment, and drag-and-drop ordering are outside the assessment scope.
-- Search, status filtering, and pagination are included as bonus features.
+- Task priority, due dates, and staff assignment are outside the assessment scope.
+- Search, status filtering, pagination, and drag-and-drop ordering are included as bonus features.

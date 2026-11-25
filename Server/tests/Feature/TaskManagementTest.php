@@ -223,6 +223,45 @@ class TaskManagementTest extends TestCase
             ->assertJsonPath('meta.total', 11);
     }
 
+    public function test_tasks_can_be_reordered_within_their_current_page(): void
+    {
+        Task::factory()->count(3)->create();
+        $orderedIds = Task::query()->orderBy('position')->pluck('id')->all();
+        $reversedIds = array_reverse($orderedIds);
+
+        $this->putJson('/api/tasks/reorder', [
+            'task_ids' => $reversedIds,
+            'page' => 1,
+        ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Task order updated successfully.');
+
+        $this->getJson('/api/tasks')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $reversedIds[0])
+            ->assertJsonPath('data.1.id', $reversedIds[1])
+            ->assertJsonPath('data.2.id', $reversedIds[2]);
+    }
+
+    public function test_reorder_rejects_tasks_outside_the_requested_page(): void
+    {
+        Task::factory()->count(11)->create();
+        $orderedIds = Task::query()->orderBy('position')->pluck('id')->all();
+        $firstPageIds = array_slice($orderedIds, 0, 10);
+        $firstPageIds[0] = $orderedIds[10];
+
+        $this->putJson('/api/tasks/reorder', [
+            'task_ids' => $firstPageIds,
+            'page' => 1,
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('task_ids');
+
+        $this->getJson('/api/tasks')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $orderedIds[0]);
+    }
+
     public function test_nonexistent_tasks_return_not_found_responses(): void
     {
         $this->getJson('/api/tasks/999')->assertNotFound();

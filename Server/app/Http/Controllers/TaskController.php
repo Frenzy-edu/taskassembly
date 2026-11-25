@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReorderTasksRequest;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\TaskFilterRequest;
 use App\Http\Requests\UpdateTaskRequest;
@@ -11,6 +12,8 @@ use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TaskController extends Controller
 {
@@ -27,7 +30,8 @@ class TaskController extends Controller
             ->when($statusFilter !== '', function (Builder $query) use ($statusFilter): void {
                 $query->where('status', $statusFilter);
             })
-            ->latest()
+            ->orderBy('position')
+            ->orderBy('id')
             ->paginate(10)
             ->withQueryString();
 
@@ -82,5 +86,43 @@ class TaskController extends Controller
         $task->update($request->validated());
 
         return new TaskResource($task->refresh());
+    }
+
+    public function reorder(ReorderTasksRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $orderedIds = array_map('intval', $validated['task_ids']);
+
+        DB::transaction(function () use ($validated, $orderedIds): void {
+            $currentPage = Task::query()
+                ->orderBy('position')
+                ->orderBy('id')
+                ->forPage($validated['page'], 10)
+                ->lockForUpdate()
+                ->get(['id', 'position']);
+
+            $currentIds = $currentPage->modelKeys();
+            $expectedIds = $orderedIds;
+            sort($currentIds);
+            sort($expectedIds);
+
+            if ($currentIds !== $expectedIds) {
+                throw ValidationException::withMessages([
+                    'task_ids' => 'The task order is out of date. Refresh the list and try again.',
+                ]);
+            }
+
+            $positions = $currentPage->pluck('position')->all();
+
+            foreach ($orderedIds as $index => $taskId) {
+                Task::query()
+                    ->whereKey($taskId)
+                    ->update(['position' => $positions[$index]]);
+            }
+        });
+
+        return response()->json([
+            'message' => 'Task order updated successfully.',
+        ]);
     }
 }
