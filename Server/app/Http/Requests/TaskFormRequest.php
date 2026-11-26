@@ -18,9 +18,11 @@ abstract class TaskFormRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'start_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date'],
             'status' => [
                 'required',
-                Rule::in([Task::STATUS_PENDING, Task::STATUS_COMPLETED]),
+                Rule::in([Task::STATUS_PENDING, Task::STATUS_IN_PROGRESS, Task::STATUS_COMPLETED]),
             ],
         ];
     }

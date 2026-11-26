@@ -18,7 +18,7 @@ class UpdateTaskStatusRequest extends FormRequest
         return [
             'status' => [
                 'required',
-                Rule::in([Task::STATUS_PENDING, Task::STATUS_COMPLETED]),
+                Rule::in([Task::STATUS_PENDING, Task::STATUS_IN_PROGRESS, Task::STATUS_COMPLETED]),
             ],
         ];
     }

@@ -2,16 +2,17 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    public function test_api_root_describes_the_task_endpoint(): void
+    use RefreshDatabase;
+
+    public function test_application_home_renders_the_dashboard(): void
     {
         $response = $this->get('/');
 
-        $response->assertOk()
-            ->assertJsonPath('message', 'Task Manager API')
-            ->assertJsonPath('tasks_endpoint', url('/api/tasks'));
+        $response->assertOk()->assertViewIs('tasks.index');
     }
 }
