@@ -12,7 +12,7 @@
             aria-label="TaskAssembly dashboard"
         >
             <span class="sidebar-brand-icon">
-                <i class="bi bi-check2" aria-hidden="true"></i>
+                <img src="{{ asset('images/logo.svg') }}" alt="" width="32" height="26">
             </span>
             <span>TaskAssembly</span>
             @if ($calendarSidebar)
