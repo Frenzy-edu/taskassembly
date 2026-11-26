@@ -1,10 +1,10 @@
 # TaskFlow
 
-TaskFlow is a single Laravel application for managing personal tasks. Laravel renders the pages with Blade and uses Eloquent for database access. Bootstrap 4.6 provides the responsive UI; SweetAlert2 handles confirmations and feedback.
+TaskFlow is a single Laravel application for managing personal tasks. Laravel renders the pages with Blade and uses Eloquent for database access. Bootstrap 4.6 (loaded from a CDN, no build step) provides the responsive UI; SweetAlert2 handles confirmations and feedback.
 
 ## Project structure
 
-- `Server/` — the Laravel application, Blade templates, Vite assets, migrations, seeders, and tests.
+This is a single Laravel application at the repository root: Blade templates, static assets in `public/js` and `public/css`, migrations, seeders, and tests. There is no JS bundler — Bootstrap 4, jQuery, FullCalendar, SortableJS, SweetAlert2, ExcelJS, and jsPDF are all loaded via CDN `<script>`/`<link>` tags in `resources/views/layouts/app.blade.php`.
 
 There is no separate frontend app or JSON API. Task creation is available from a Bootstrap modal and a dedicated page; editing uses a dedicated page. Search, status filtering, and pagination run through Laravel database queries. Drag-and-drop ordering is included as an optional enhancement.
 
@@ -12,21 +12,19 @@ There is no separate frontend app or JSON API. Task creation is available from a
 
 - PHP 8.3+ with PDO SQLite enabled (or PDO MySQL when using MySQL).
 - Composer.
-- Node.js and pnpm 10.33.0.
 - SQLite for the default local setup, or MySQL if configured below.
+- An internet connection in the browser (Bootstrap 4, jQuery, and the other frontend libraries load from a CDN; there is no local Node/npm build step).
 
 ## First-time setup
 
 Run these commands from the project root in PowerShell:
 
 ```powershell
-cd .\Server
 composer install
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 php artisan key:generate
 if (-not (Test-Path .\database\database.sqlite)) { New-Item -ItemType File .\database\database.sqlite | Out-Null }
 php artisan migrate --seed
-pnpm install
 ```
 
 The seeder adds sample tasks for development. To start with an empty task list, use `php artisan migrate` without `--seed`.
@@ -41,7 +39,7 @@ $env:PHPRC = $phpDir
 $env:Path = "$phpDir;$env:Path"
 ```
 
-On another machine, install PHP and Composer as listed under Requirements. If `composer` is not recognized in this workspace, run this from `Server/` after setting `$phpDir` above:
+On another machine, install PHP and Composer as listed under Requirements. If `composer` is not recognized in this workspace, run this from the project root after setting `$phpDir` above:
 
 ```powershell
 & "$phpDir\php.exe" "$env:LOCALAPPDATA\TaskManagerToolchain\composer.phar" install
@@ -49,9 +47,7 @@ On another machine, install PHP and Composer as listed under Requirements. If `c
 
 ## Run locally
 
-Keep both processes running in separate terminals.
-
-**Terminal 1 — Laravel application** (from `D:\TaskManager\Server`):
+From `D:\TaskManager`:
 
 ```powershell
 $phpDir = "$env:LOCALAPPDATA\TaskManagerToolchain\php-8.5.13"
@@ -62,13 +58,7 @@ php artisan serve --host=127.0.0.1 --port=8000
 
 If PHP is already on `PATH`, the first three lines are not needed.
 
-**Terminal 2 — Vite assets** (also from `D:\TaskManager\Server`):
-
-```powershell
-pnpm dev
-```
-
-Open **http://127.0.0.1:8000**. Vite serves the development assets; it is not a separate application. For a production-style local run, use `pnpm build` instead of `pnpm dev`.
+Open **http://127.0.0.1:8000**. There is no separate asset-build step or second terminal — `public/js/app.js` and `public/css/taskflow.css` are served as-is, and the rest of the frontend libraries load straight from a CDN.
 
 ## Features
 
@@ -76,7 +66,7 @@ Open **http://127.0.0.1:8000**. Vite serves the development assets; it is not a 
 - Enable “Add another task” in the create modal to save the task and reopen a fresh form.
 - Open the create-task modal from the sidebar, task list, or calendar; selecting a calendar day pre-fills its due date.
 - Delete tasks after SweetAlert2 confirmation.
-- Change status between Pending and Completed.
+- Change status between Pending, In Progress, and Completed.
 - Search by title or status, filter by status, and paginate while retaining filters.
 - Switch between list, card-grid, and calendar views; export the current filtered task set as CSV.
 - Dashboard schedule tabs for all, overdue, due today, due this week, and upcoming tasks, with database-calculated counts.
@@ -84,11 +74,17 @@ Open **http://127.0.0.1:8000**. Vite serves the development assets; it is not a 
 - Responsive Dashboard, All Tasks, Completed, and Pending navigation.
 - Optional drag-and-drop ordering on the unfiltered task list.
 
+### Bonus features implemented
+
+- Search bar filtering tasks by title or status.
+- Pagination for long task lists.
+- Drag-and-drop task reordering, persisted to the database.
+
 ## Database
 
-The `tasks` table contains a required title, optional description, optional start and indexed due dates, status (`pending` or `completed`), ordering position, and timestamps. Laravel migrations and Eloquent handle database access.
+The `tasks` table contains a required title, optional description, optional start and indexed due dates, status (`pending`, `in_progress`, or `completed`), ordering position, and timestamps. Laravel migrations and Eloquent handle database access.
 
-SQLite is the default. To use MySQL, configure `Server/.env`:
+SQLite is the default. To use MySQL, configure `.env`:
 
 ```dotenv
 DB_CONNECTION=mysql
@@ -99,16 +95,13 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Enable PHP's `pdo_mysql` extension, then run `php artisan config:clear` and `php artisan migrate --seed` from `Server/`.
+Enable PHP's `pdo_mysql` extension, then run `php artisan config:clear` and `php artisan migrate --seed`.
 
-## Tests and assets
-
-From `Server/`:
+## Tests
 
 ```powershell
 php artisan test
 vendor\bin\pint --test
-pnpm build
 ```
 
 ## Assumptions

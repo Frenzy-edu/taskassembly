@@ -1,11 +1,7 @@
-import Sortable from 'sortablejs';
-import Swal from 'sweetalert2';
-import $ from 'jquery';
-import 'bootstrap/js/dist/modal';
-import 'bootstrap/js/dist/tooltip';
-import { Calendar } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
+const Sortable = window.Sortable;
+const Swal = window.Swal;
+const $ = window.jQuery;
+const { Calendar } = window.FullCalendar;
 
 const toast = Swal.mixin({
     toast: true,
@@ -122,41 +118,44 @@ function initializeProgressToggles(container = document) {
 document.querySelectorAll('.task-form').forEach(initializeTaskForm);
 initializeProgressToggles();
 
-document.querySelectorAll('[data-delete-form]').forEach((form) => {
-    form.addEventListener('submit', async (event) => {
-        if (form.dataset.confirmed === 'true') {
-            return;
-        }
+document.addEventListener('submit', async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches('[data-delete-form]')) {
+        return;
+    }
 
-        event.preventDefault();
+    if (form.dataset.confirmed === 'true') {
+        return;
+    }
 
-        const result = await Swal.fire({
-            title: 'Confirm Deletion',
-            text: `Are you sure you want to delete “${form.dataset.taskTitle}”?`,
-            icon: 'warning',
-            scrollbarPadding: false,
-            showCancelButton: true,
-            confirmButtonText: 'Delete task',
-            cancelButtonText: 'Cancel',
-            reverseButtons: true,
-            focusCancel: true,
-            buttonsStyling: false,
-            showClass: { popup: '' },
-            hideClass: { popup: '' },
-            customClass: {
-                popup: 'task-delete-confirmation',
-                confirmButton: 'btn btn-danger',
-                cancelButton: 'btn btn-secondary',
-            },
-        });
+    event.preventDefault();
 
-        if (!result.isConfirmed) {
-            return;
-        }
-
-        form.dataset.confirmed = 'true';
-        form.requestSubmit();
+    const result = await Swal.fire({
+        title: 'Confirm Deletion',
+        text: `Are you sure you want to delete “${form.dataset.taskTitle}”?`,
+        icon: 'warning',
+        scrollbarPadding: false,
+        showCancelButton: true,
+        confirmButtonText: 'Delete task',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        focusCancel: true,
+        buttonsStyling: false,
+        showClass: { popup: '' },
+        hideClass: { popup: '' },
+        customClass: {
+            popup: 'task-delete-confirmation',
+            confirmButton: 'btn btn-danger',
+            cancelButton: 'btn btn-secondary',
+        },
     });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    form.dataset.confirmed = 'true';
+    form.requestSubmit();
 });
 
 const sidebarToggle = document.querySelector('#sidebarToggle');
@@ -457,27 +456,51 @@ filterToggle?.addEventListener('click', () => {
     setFilterPopoverOpen(filterPopover?.hidden ?? true);
 });
 
-filterPopover?.querySelectorAll('[data-filter-submit], [data-filter-next-days]').forEach((input) => {
-    input.addEventListener('change', () => input.form?.requestSubmit());
+filterPopover?.addEventListener('change', (event) => {
+    const input = event.target;
+    if (
+        input instanceof HTMLInputElement &&
+        input.matches('[data-filter-submit], [data-filter-next-days]')
+    ) {
+        input.form?.requestSubmit();
+    }
 });
 
-const nextDaysInput = filterPopover?.querySelector('[data-filter-next-days]');
-filterPopover?.querySelectorAll('[data-filter-step]').forEach((button) => {
-    button.addEventListener('click', () => {
-        if (!nextDaysInput) {
-            return;
-        }
+filterPopover?.addEventListener('click', (event) => {
+    const button = event.target instanceof Element
+        ? event.target.closest('[data-filter-step]')
+        : null;
+    const nextDaysInput = filterPopover.querySelector('[data-filter-next-days]');
 
-        const increment = Number(button.dataset.filterStep);
-        const nextValue = Math.min(365, Math.max(0, Number(nextDaysInput.value || 0) + increment));
-        nextDaysInput.value = String(nextValue);
-        nextDaysInput.form?.requestSubmit();
-    });
+    if (!button || !nextDaysInput) {
+        return;
+    }
+
+    const increment = Number(button.dataset.filterStep);
+    const nextValue = Math.min(365, Math.max(0, Number(nextDaysInput.value || 0) + increment));
+    nextDaysInput.value = String(nextValue);
+    nextDaysInput.form?.requestSubmit();
 });
 
-filterPopover?.querySelector('[data-filter-close]')?.addEventListener('click', () => {
+filterPopover?.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest('[data-filter-close]')) {
+        return;
+    }
+
     setFilterPopoverOpen(false);
     filterToggle?.focus({ preventScroll: true });
+});
+
+filterPopover?.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    if (!filterPopover) {
+        return;
+    }
+
+    const targetUrl = new URL(filterPopover.action, window.location.href);
+    targetUrl.search = new URLSearchParams(new FormData(filterPopover)).toString();
+    navigateWorkspace(targetUrl.href);
 });
 
 document.addEventListener('click', (event) => {
@@ -562,8 +585,7 @@ document.querySelector('[data-export-xlsx]')?.addEventListener('click', async (e
 
     try {
         const data = await loadExportData(button.dataset.exportUrl);
-        const { default: ExcelJS } = await import('exceljs');
-        const workbook = new ExcelJS.Workbook();
+        const workbook = new window.ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Tasks');
         worksheet.addRow(data.columns);
         worksheet.getRow(1).font = { bold: true };
@@ -593,14 +615,11 @@ document.querySelector('[data-export-pdf]')?.addEventListener('click', async (ev
 
     try {
         const data = await loadExportData(button.dataset.exportUrl);
-        const [{ jsPDF }, { default: autoTable }] = await Promise.all([
-            import('jspdf'),
-            import('jspdf-autotable'),
-        ]);
+        const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ orientation: 'landscape' });
         pdf.setFontSize(18);
         pdf.text('Task List', 14, 16);
-        autoTable(pdf, {
+        pdf.autoTable({
             head: [data.columns],
             body: data.rows,
             startY: 23,
@@ -635,13 +654,21 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-const taskList = document.querySelector('[data-sortable-list]');
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+let sortableInstance = null;
 
-if (taskList?.dataset.sortableEnabled === 'true' && csrfToken) {
+function initializeSortable(container = document) {
+    sortableInstance?.destroy();
+    sortableInstance = null;
+
+    const taskList = container.querySelector('[data-sortable-list]');
+    if (taskList?.dataset.sortableEnabled !== 'true' || !csrfToken) {
+        return;
+    }
+
     let orderBeforeDrag = [];
 
-    Sortable.create(taskList, {
+    sortableInstance = Sortable.create(taskList, {
         animation: 120,
         draggable: 'tr[data-task-id]',
         forceFallback: true,
@@ -702,11 +729,21 @@ if (taskList?.dataset.sortableEnabled === 'true' && csrfToken) {
     });
 }
 
-const calendarElement = document.querySelector('#taskCalendar');
+initializeSortable();
 
-if (calendarElement) {
-    const calendarTitle = document.querySelector('[data-calendar-title]');
-    const emptyMessage = document.querySelector('[data-calendar-empty]');
+let calendarInstance = null;
+
+function initializeCalendar(container = document) {
+    calendarInstance?.destroy();
+    calendarInstance = null;
+
+    const calendarElement = container.querySelector('#taskCalendar');
+    if (!calendarElement) {
+        return;
+    }
+
+    const calendarTitle = container.querySelector('[data-calendar-title]');
+    const emptyMessage = container.querySelector('[data-calendar-empty]');
     const searchTerm = calendarElement.dataset.search || '';
     const statusFilters = (calendarElement.dataset.statuses || '')
         .split(',')
@@ -716,8 +753,33 @@ if (calendarElement) {
         .filter(Boolean);
     const nextDays = calendarElement.dataset.nextDays || '0';
 
+    const openCreateTaskModal = (dateString) => {
+        const dueDate = dateString.slice(0, 10);
+        const createTaskModal = document.querySelector('#createTaskModal');
+        const dueDateField = createTaskModal?.querySelector('#modal-due_date');
+
+        if (createTaskModal && dueDateField) {
+            dueDateField.value = dueDate;
+            dueDateField.dispatchEvent(new Event('input', { bubbles: true }));
+            $(createTaskModal).modal('show');
+            return;
+        }
+
+        const createUrl = new URL(calendarElement.dataset.createUrl, window.location.origin);
+        createUrl.searchParams.set('due_date', dueDate);
+        createUrl.searchParams.set('return_to', 'calendar');
+        if (searchTerm) {
+            createUrl.searchParams.set('search', searchTerm);
+        }
+        statusFilters.forEach((status) => createUrl.searchParams.append('status[]', status));
+        dueFilters.forEach((dueFilter) => createUrl.searchParams.append('due[]', dueFilter));
+        if (dueFilters.includes('next')) {
+            createUrl.searchParams.set('next_days', nextDays);
+        }
+        window.location.assign(createUrl);
+    };
+
     const calendar = new Calendar(calendarElement, {
-        plugins: [dayGridPlugin, interactionPlugin],
         initialView: 'dayGridWeek',
         firstDay: 0,
         headerToolbar: false,
@@ -786,11 +848,46 @@ if (calendarElement) {
                 calendarTitle.textContent = info.view.title;
             }
 
-            document.querySelectorAll('[data-calendar-view]').forEach((button) => {
+            container.querySelectorAll('[data-calendar-view]').forEach((button) => {
                 const isActive = button.dataset.calendarView === info.view.type;
                 button.classList.toggle('active', isActive);
                 button.setAttribute('aria-pressed', String(isActive));
             });
+        },
+        dayCellDidMount: (info) => {
+            const dayFrame = info.el.querySelector('.fc-daygrid-day-frame');
+            if (!dayFrame) {
+                return;
+            }
+
+            const date = info.date;
+            const dateString = [
+                date.getFullYear(),
+                String(date.getMonth() + 1).padStart(2, '0'),
+                String(date.getDate()).padStart(2, '0'),
+            ].join('-');
+            const addTaskButton = document.createElement('button');
+            addTaskButton.className = 'calendar-add-task-button';
+            addTaskButton.type = 'button';
+            addTaskButton.setAttribute(
+                'aria-label',
+                `Add task on ${date.toLocaleDateString(undefined, { dateStyle: 'long' })}`,
+            );
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-plus';
+            icon.setAttribute('aria-hidden', 'true');
+
+            const label = document.createElement('span');
+            label.textContent = 'Add task';
+
+            addTaskButton.append(icon, label);
+            addTaskButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                openCreateTaskModal(dateString);
+            });
+            dayFrame.append(addTaskButton);
         },
         eventsSet: (events) => {
             if (emptyMessage) {
@@ -809,37 +906,216 @@ if (calendarElement) {
             calendarElement.setAttribute('aria-busy', String(isLoading));
         },
         dateClick: (info) => {
-            const createTaskModal = document.querySelector('#createTaskModal');
-            const dueDateField = createTaskModal?.querySelector('#modal-due_date');
-
-            if (createTaskModal && dueDateField) {
-                dueDateField.value = info.dateStr.slice(0, 10);
-                dueDateField.dispatchEvent(new Event('input', { bubbles: true }));
-                $(createTaskModal).modal('show');
+            if (
+                info.jsEvent.target instanceof Element &&
+                info.jsEvent.target.closest('.calendar-add-task-button')
+            ) {
                 return;
             }
 
-            const createUrl = new URL(calendarElement.dataset.createUrl, window.location.origin);
-            createUrl.searchParams.set('due_date', info.dateStr.slice(0, 10));
-            createUrl.searchParams.set('return_to', 'calendar');
-            if (searchTerm) {
-                createUrl.searchParams.set('search', searchTerm);
-            }
-            statusFilters.forEach((status) => createUrl.searchParams.append('status[]', status));
-            dueFilters.forEach((dueFilter) => createUrl.searchParams.append('due[]', dueFilter));
-            if (dueFilters.includes('next')) {
-                createUrl.searchParams.set('next_days', nextDays);
-            }
-            window.location.assign(createUrl);
+            openCreateTaskModal(info.dateStr);
         },
     });
 
-    document.querySelector('[data-calendar-prev]')?.addEventListener('click', () => calendar.prev());
-    document.querySelector('[data-calendar-next]')?.addEventListener('click', () => calendar.next());
-    document.querySelector('[data-calendar-today]')?.addEventListener('click', () => calendar.today());
-    document.querySelectorAll('[data-calendar-view]').forEach((button) => {
+    container.querySelector('[data-calendar-prev]')?.addEventListener('click', () => calendar.prev());
+    container.querySelector('[data-calendar-next]')?.addEventListener('click', () => calendar.next());
+    container.querySelector('[data-calendar-today]')?.addEventListener('click', () => calendar.today());
+    container.querySelectorAll('[data-calendar-view]').forEach((button) => {
         button.addEventListener('click', () => calendar.changeView(button.dataset.calendarView));
     });
 
     calendar.render();
+    calendarInstance = calendar;
 }
+
+initializeCalendar();
+
+let workspaceNavigationRequest = null;
+
+function updateWorkspaceHeader(nextDocument, filterWasOpen, filterScrollTop) {
+    const nextTitle = nextDocument.querySelector('.topbar-title');
+    const currentTitle = document.querySelector('.topbar-title');
+    if (nextTitle && currentTitle) {
+        currentTitle.textContent = nextTitle.textContent;
+    }
+
+    document.title = nextDocument.title;
+
+    const nextViewLinks = nextDocument.querySelectorAll('.view-switch-button');
+    document.querySelectorAll('.view-switch-button').forEach((link) => {
+        const nextLink = Array.from(nextViewLinks)
+            .find((candidate) => candidate.getAttribute('aria-label') === link.getAttribute('aria-label'));
+        if (!nextLink) {
+            return;
+        }
+
+        link.href = nextLink.href;
+        link.className = nextLink.className;
+        if (nextLink.hasAttribute('aria-current')) {
+            link.setAttribute('aria-current', nextLink.getAttribute('aria-current'));
+        } else {
+            link.removeAttribute('aria-current');
+        }
+    });
+
+    const currentSearch = document.querySelector('.global-search');
+    const nextSearch = nextDocument.querySelector('.global-search');
+    if (currentSearch && nextSearch) {
+        currentSearch.action = nextSearch.action;
+        currentSearch.querySelectorAll('input[type="hidden"]').forEach((input) => input.remove());
+        nextSearch.querySelectorAll('input[type="hidden"]').forEach((input) => {
+            currentSearch.prepend(input.cloneNode(true));
+        });
+    }
+
+    if (filterPopover) {
+        const nextFilterPopover = nextDocument.querySelector('[data-filter-popover]');
+        if (nextFilterPopover) {
+            filterPopover.action = nextFilterPopover.action;
+            filterPopover.innerHTML = nextFilterPopover.innerHTML;
+            filterPopover.hidden = !filterWasOpen;
+            filterPopover.scrollTop = filterScrollTop;
+        }
+    }
+
+    if (filterToggle) {
+        const nextFilterToggle = nextDocument.querySelector('[data-filter-toggle]');
+        if (nextFilterToggle) {
+            filterToggle.innerHTML = nextFilterToggle.innerHTML;
+            filterToggle.setAttribute('aria-expanded', String(filterWasOpen));
+        }
+    }
+
+    const currentExportUrls = document.querySelectorAll('[data-export-url]');
+    const nextExportUrls = nextDocument.querySelectorAll('[data-export-url]');
+    currentExportUrls.forEach((element, index) => {
+        if (nextExportUrls[index]) {
+            element.dataset.exportUrl = nextExportUrls[index].dataset.exportUrl;
+        }
+    });
+
+    const currentCsvLink = document.querySelector('.task-export-option[href]');
+    const nextCsvLink = nextDocument.querySelector('.task-export-option[href]');
+    if (currentCsvLink && nextCsvLink) {
+        currentCsvLink.href = nextCsvLink.href;
+    }
+}
+
+async function navigateWorkspace(href, { pushHistory = true } = {}) {
+    const targetUrl = new URL(href, window.location.href);
+    if (targetUrl.origin !== window.location.origin) {
+        throw new Error('Workspace navigation must stay on this site.');
+    }
+
+    workspaceNavigationRequest?.abort();
+    const request = new AbortController();
+    workspaceNavigationRequest = request;
+
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) {
+        throw new Error('The task workspace could not be found.');
+    }
+
+    const filterWasOpen = Boolean(filterPopover && !filterPopover.hidden);
+    const filterScrollTop = filterPopover?.scrollTop ?? 0;
+    const focusedFilterId = filterPopover?.contains(document.activeElement)
+        ? document.activeElement.id
+        : '';
+
+    try {
+        const response = await fetch(targetUrl, {
+            headers: {
+                Accept: 'text/html',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            signal: request.signal,
+        });
+        if (!response.ok) {
+            throw new Error('The task view could not be loaded. Please try again.');
+        }
+
+        const nextDocument = new DOMParser().parseFromString(await response.text(), 'text/html');
+        const nextMainContent = nextDocument.querySelector('.main-content');
+        if (!nextMainContent) {
+            throw new Error('The task view returned an unexpected response.');
+        }
+
+        sortableInstance?.destroy();
+        sortableInstance = null;
+        calendarInstance?.destroy();
+        calendarInstance = null;
+
+        mainContent.innerHTML = nextMainContent.innerHTML;
+        document.body.className = nextDocument.body.className;
+        updateWorkspaceHeader(nextDocument, filterWasOpen, filterScrollTop);
+
+        if (pushHistory) {
+            window.history.pushState({}, '', response.url);
+        }
+
+        initializeProgressToggles(mainContent);
+        initializeSortable(mainContent);
+        initializeCalendar(mainContent);
+
+        if (focusedFilterId) {
+            Array.from(filterPopover.querySelectorAll('[id]'))
+                .find((element) => element.id === focusedFilterId)
+                ?.focus({ preventScroll: true });
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            return;
+        }
+
+        console.error(error);
+        toast.fire({
+            icon: 'error',
+            title: 'Unable to update the workspace',
+            text: error.message,
+        });
+    } finally {
+        if (workspaceNavigationRequest === request) {
+            workspaceNavigationRequest = null;
+        }
+    }
+}
+
+document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) {
+        return;
+    }
+
+    const viewLink = event.target.closest('.view-switch-button');
+    if (
+        !viewLink ||
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+    if (!viewLink.hasAttribute('aria-current')) {
+        navigateWorkspace(viewLink.href);
+    }
+});
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches('.global-search')) {
+        return;
+    }
+
+    event.preventDefault();
+    const targetUrl = new URL(form.action, window.location.href);
+    targetUrl.search = new URLSearchParams(new FormData(form)).toString();
+    navigateWorkspace(targetUrl.href);
+});
+
+window.addEventListener('popstate', () => {
+    navigateWorkspace(window.location.href, { pushHistory: false });
+});

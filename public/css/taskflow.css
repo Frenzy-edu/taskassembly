@@ -636,16 +636,21 @@ textarea:focus-visible {
     width: min(472px, calc(100vw - 32px));
     max-height: calc(100vh - var(--header-height) - 16px);
     overflow-y: auto;
-    padding: 0 24px 24px;
+    padding: 0 20px 14px;
     border: 1px solid #777;
     border-radius: 12px;
     background: #363636;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+    scrollbar-width: none;
+}
+
+.filter-popover::-webkit-scrollbar {
+    display: none;
 }
 
 .filter-popover-header {
     display: flex;
-    min-height: 72px;
+    min-height: 56px;
     align-items: center;
     gap: 12px;
     border-bottom: 1px solid #484848;
@@ -657,7 +662,7 @@ textarea:focus-visible {
     gap: 11px;
     margin: 0;
     color: #f0f0f0;
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
 }
 
@@ -684,33 +689,33 @@ textarea:focus-visible {
 }
 
 .filter-group {
-    margin: 14px 0 24px;
+    margin: 8px 0 14px;
     padding: 0;
     border: 0;
 }
 
 .filter-group legend {
-    margin: 0 12px 12px;
+    margin: 0 10px 6px;
     color: #a7a7a7;
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     font-weight: 500;
 }
 
 .filter-options {
     overflow: hidden;
-    border-radius: 16px;
+    border-radius: 12px;
     background: #292929;
 }
 
 .filter-option {
     position: relative;
     display: flex;
-    min-height: 61px;
+    min-height: 46px;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
     margin: 0;
-    padding: 0 12px;
+    padding: 0 10px;
     border-bottom: 1px solid #353535;
     background: transparent;
     color: #e0e0e0;
@@ -718,12 +723,12 @@ textarea:focus-visible {
 }
 
 .filter-options > .filter-option:first-child {
-    border-radius: 16px 16px 0 0;
+    border-radius: 12px 12px 0 0;
 }
 
 .filter-options > .filter-option:last-child {
     border-bottom: 0;
-    border-radius: 0 0 16px 16px;
+    border-radius: 0 0 12px 12px;
 }
 
 .filter-option:hover {
@@ -733,15 +738,15 @@ textarea:focus-visible {
 .filter-option-label {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     color: #d7d7d7;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
 }
 
 .filter-option-label i {
     color: #aaa;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .filter-toggle-input {
@@ -753,8 +758,8 @@ textarea:focus-visible {
 
 .filter-switch {
     position: relative;
-    width: 60px;
-    height: 30px;
+    width: 52px;
+    height: 26px;
     flex: 0 0 auto;
     border: 1px solid #666;
     border-radius: 16px;
@@ -766,8 +771,8 @@ textarea:focus-visible {
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: #a5a5a5;
     content: "";
@@ -780,7 +785,7 @@ textarea:focus-visible {
 }
 
 .filter-toggle-input:checked + .filter-switch::after {
-    transform: translateX(29px);
+    transform: translateX(26px);
     background: #fff;
 }
 
@@ -798,21 +803,21 @@ textarea:focus-visible {
     align-items: center;
     gap: 5px;
     color: #a7a7a7;
-    font-size: 0.95rem;
+    font-size: 0.82rem;
 }
 
 .filter-days-step,
 .filter-days-input {
     display: inline-flex;
-    width: 37px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     align-items: center;
     justify-content: center;
     border: 1px solid #626262;
     border-radius: 8px;
     background: #303030;
     color: #e5e5e5;
-    font-size: 1.05rem;
+    font-size: 0.92rem;
 }
 
 .filter-days-step {
@@ -826,7 +831,7 @@ textarea:focus-visible {
 }
 
 .filter-days-input {
-    width: 54px;
+    width: 44px;
     padding: 0 4px;
     text-align: center;
     appearance: textfield;
@@ -1140,7 +1145,7 @@ textarea:focus-visible {
     background: var(--surface);
 }
 
-.task-calendar .fc {
+.task-calendar.fc {
     --fc-border-color: #4a4a4a;
     --fc-page-bg-color: transparent;
     --fc-neutral-bg-color: #2b2b2b;
@@ -1156,23 +1161,23 @@ textarea:focus-visible {
     border-color: #484848;
 }
 
-.task-calendar .fc .fc-col-header-cell {
+.task-calendar.fc .fc-col-header-cell {
     background: #2c2c2c;
 }
 
-.task-calendar .fc .fc-col-header-cell-cushion,
-.task-calendar .fc .fc-daygrid-day-number {
+.task-calendar.fc .fc-col-header-cell-cushion,
+.task-calendar.fc .fc-daygrid-day-number {
     color: #c1c1c1;
     font-size: 0.78rem;
 }
 
-.task-calendar .fc .fc-col-header-cell-cushion:hover,
-.task-calendar .fc .fc-daygrid-day-number:hover {
+.task-calendar.fc .fc-col-header-cell-cushion:hover,
+.task-calendar.fc .fc-daygrid-day-number:hover {
     color: #fff;
     text-decoration: none;
 }
 
-.task-calendar .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+.task-calendar.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
     display: inline-flex;
     min-width: 25px;
     height: 25px;
@@ -1183,42 +1188,84 @@ textarea:focus-visible {
     color: #fff;
 }
 
-.task-calendar .fc .fc-button-primary {
+.task-calendar.fc .fc-button-primary {
     border-color: #555;
     background: #3a3a3a;
     color: #e3e3e3;
     box-shadow: none;
 }
 
-.task-calendar .fc .fc-button-primary:hover {
+.task-calendar.fc .fc-button-primary:hover {
     border-color: #707070;
     background: #484848;
 }
 
-.task-calendar .fc .fc-button-primary:not(:disabled).fc-button-active,
-.task-calendar .fc .fc-button-primary:not(:disabled):active {
+.task-calendar.fc .fc-button-primary:not(:disabled).fc-button-active,
+.task-calendar.fc .fc-button-primary:not(:disabled):active {
     border-color: var(--blue);
     background: var(--blue);
     color: #fff;
 }
 
-.task-calendar .fc .fc-button-primary:focus {
+.task-calendar.fc .fc-button-primary:focus {
     box-shadow: 0 0 0 0.15rem rgba(74, 158, 208, 0.25);
 }
 
-.task-calendar .fc .fc-daygrid-day {
+.task-calendar.fc .fc-daygrid-day {
     background: #2d2d2d;
 }
 
-.task-calendar .fc .fc-daygrid-day:hover {
+.task-calendar.fc .fc-daygrid-day:hover {
     background: #343434;
 }
 
-.task-calendar .fc .fc-daygrid-day-frame {
+.task-calendar.fc .fc-daygrid-day-frame {
     min-height: 105px;
+    position: relative;
 }
 
-.task-calendar .fc .fc-event {
+.calendar-add-task-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    position: absolute;
+    top: 2.1rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+    padding: 0.45rem 0.75rem;
+    border: none;
+    border-radius: 999px;
+    background: #454545;
+    color: #d8d8d8;
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.4;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+    z-index: 2;
+}
+
+.calendar-add-task-button i {
+    font-size: 1rem;
+}
+
+.task-calendar.fc .fc-daygrid-day:hover .calendar-add-task-button {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.calendar-add-task-button:hover,
+.calendar-add-task-button:focus-visible {
+    background: #545454;
+    color: #fff;
+}
+
+.task-calendar.fc .fc-event {
     padding: 2px 4px;
     border-color: #5d8ea9;
     background: #344a57;
@@ -1226,35 +1273,35 @@ textarea:focus-visible {
     font-size: 0.74rem;
 }
 
-.task-calendar .fc .fc-event.task-event--completed {
+.task-calendar.fc .fc-event.task-event--completed {
     border-color: #548260;
     background: #304b35;
     color: #e0f0e2;
 }
 
-.task-calendar .fc .fc-event.task-event--pending {
+.task-calendar.fc .fc-event.task-event--pending {
     border-color: #92733d;
     background: #4b3d25;
     color: #f2e3c3;
 }
 
-.task-calendar .fc .fc-event.task-event--in_progress {
+.task-calendar.fc .fc-event.task-event--in_progress {
     border-color: #4283a6;
     background: #29495b;
     color: #d9edf7;
 }
 
-.task-calendar .fc .fc-event:hover {
+.task-calendar.fc .fc-event:hover {
     filter: brightness(1.15);
 }
 
-.task-calendar .fc .fc-popover {
+.task-calendar.fc .fc-popover {
     border-color: #555;
     background: #363636;
     color: #eee;
 }
 
-.task-calendar .fc .fc-popover-header {
+.task-calendar.fc .fc-popover-header {
     background: #2d2d2d;
     color: #eee;
 }
@@ -2849,7 +2896,7 @@ html.swal2-shown .app-shell {
     background: #333;
 }
 
-.calendar-page .task-calendar .fc {
+.calendar-page .task-calendar.fc {
     height: 100%;
 }
 
