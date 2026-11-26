@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TaskController extends Controller
 {
+    // Render the paginated task list, dashboard, or filtered view depending on the current route.
     public function index(TaskFilterRequest $request): View
     {
         [
@@ -86,6 +87,7 @@ class TaskController extends Controller
         ));
     }
 
+    // Render the calendar page shell, with filters preserved for the client-side fetch.
     public function calendar(TaskFilterRequest $request): View
     {
         [
@@ -99,6 +101,7 @@ class TaskController extends Controller
         return view('tasks.calendar', compact('searchTerm', 'statusFilters', 'dueFilters', 'nextDays', 'taskCount'));
     }
 
+    // Return tasks due within the requested date range as FullCalendar JSON events.
     public function calendarEvents(CalendarEventsRequest $request): JsonResponse
     {
         $filters = $request->validated();
@@ -145,6 +148,7 @@ class TaskController extends Controller
         return response()->json($events);
     }
 
+    // Export the filtered task set as a CSV download, or as JSON rows for client-side xlsx/pdf generation.
     public function export(TaskFilterRequest $request): JsonResponse|StreamedResponse
     {
         [
@@ -194,6 +198,7 @@ class TaskController extends Controller
         }, 'tasks.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
+    // Show the create-task form, pre-filling the due date when opened from the calendar.
     public function create(Request $request): View
     {
         $request->validate([
@@ -221,6 +226,7 @@ class TaskController extends Controller
         ]);
     }
 
+    // Persist a new task and redirect back to wherever the form was opened from.
     public function store(StoreTaskRequest $request): RedirectResponse
     {
         Task::create($request->safe()->except('add_another'));
@@ -228,6 +234,7 @@ class TaskController extends Controller
         return $this->taskChangeRedirect($request, 'Task created successfully.');
     }
 
+    // Show the edit form for a task, either as a full page or as modal content.
     public function edit(Request $request, Task $task): View|Response
     {
         $returnTo = $request->query('return_to');
@@ -260,6 +267,7 @@ class TaskController extends Controller
         return view('tasks.edit', $viewData);
     }
 
+    // Save edits to a task, responding with JSON for AJAX callers or a redirect otherwise.
     public function update(UpdateTaskRequest $request, Task $task): JsonResponse|RedirectResponse
     {
         $task->update($request->validated());
@@ -273,6 +281,7 @@ class TaskController extends Controller
         return $this->taskChangeRedirect($request, 'Task updated successfully.');
     }
 
+    // Delete a task and return to the previous page.
     public function destroy(Task $task): RedirectResponse
     {
         $task->delete();
@@ -280,6 +289,7 @@ class TaskController extends Controller
         return back()->with('success', 'Task deleted successfully.');
     }
 
+    // Change a task's status (pending/in progress/completed) from a quick-action control.
     public function updateStatus(UpdateTaskStatusRequest $request, Task $task): RedirectResponse
     {
         $task->update($request->validated());
@@ -288,6 +298,7 @@ class TaskController extends Controller
         return back()->with('success', "Task marked {$statusLabel}.");
     }
 
+    // Persist a drag-and-drop reorder for one page of tasks, rejecting stale orderings.
     public function reorder(ReorderTasksRequest $request): RedirectResponse
     {
         $validated = $request->validated();
@@ -324,6 +335,7 @@ class TaskController extends Controller
         return back()->with('success', 'Task order saved.');
     }
 
+    // Normalize the validated search/status/due filters into a consistent shape.
     private function validatedTaskFilters(TaskFilterRequest $request): array
     {
         $filters = $request->validated();
@@ -336,6 +348,7 @@ class TaskController extends Controller
         ];
     }
 
+    // Build the base task query applying search, status, and due-date filters.
     private function filteredTaskQuery(
         string $searchTerm,
         array $statusFilters,
@@ -407,6 +420,7 @@ class TaskController extends Controller
             });
     }
 
+    // Narrow a task query to the dashboard's schedule tab (overdue, today, week, upcoming).
     private function applyDashboardSchedule(Builder $query, string $schedule): Builder
     {
         $today = CarbonImmutable::today()->toDateString();
@@ -429,6 +443,7 @@ class TaskController extends Controller
         };
     }
 
+    // Compute the dashboard's per-tab task counts (all, overdue, today, week, upcoming).
     private function dashboardCounts(
         string $searchTerm,
         array $statusFilters,
@@ -460,6 +475,7 @@ class TaskController extends Controller
         ];
     }
 
+    // Extract the current request's filter query params for reuse in generated route URLs.
     private function taskFilterQuery(Request $request): array
     {
         return array_filter([
@@ -473,6 +489,7 @@ class TaskController extends Controller
         ], fn ($value): bool => $value !== null && $value !== '' && $value !== []);
     }
 
+    // Redirect back to the list, dashboard, or calendar after a create/update, with a flash message.
     private function taskChangeRedirect(Request $request, string $message): RedirectResponse
     {
         $filterQuery = $this->taskFilterQuery($request);

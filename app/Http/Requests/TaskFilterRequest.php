@@ -8,11 +8,13 @@ use Illuminate\Validation\Rule;
 
 class TaskFilterRequest extends FormRequest
 {
+    // No per-user auth is enforced; this is a single-user task list.
     public function authorize(): bool
     {
         return true;
     }
 
+    // Validate the shared search/status/due/view/pagination filters used across task pages.
     public function rules(): array
     {
         $statusValues = [

@@ -16,6 +16,7 @@ class Task extends Model
 
     public const STATUS_COMPLETED = 'completed';
 
+    // Register model event hooks: assign a leading position on create, and keep a unique slug on save.
     protected static function booted(): void
     {
         static::creating(function (Task $task): void {
@@ -51,6 +52,7 @@ class Task extends Model
         'due_date',
     ];
 
+    // Cast start/due dates to Carbon date instances.
     protected function casts(): array
     {
         return [
@@ -59,11 +61,13 @@ class Task extends Model
         ];
     }
 
+    // Use the slug column for route-model binding instead of the numeric id.
     public function getRouteKeyName(): string
     {
         return 'slug';
     }
 
+    // Resolve a route binding by slug, falling back to id for older numeric links.
     public function resolveRouteBinding($value, $field = null)
     {
         $field ??= $this->getRouteKeyName();

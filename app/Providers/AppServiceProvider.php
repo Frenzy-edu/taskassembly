@@ -7,17 +7,13 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
+    // No custom service bindings are needed.
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
+    // Render Laravel's paginator views using Bootstrap 4 markup.
     public function boot(): void
     {
         Paginator::useBootstrapFour();

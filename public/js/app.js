@@ -53,6 +53,7 @@ if (createTaskModal) {
     }
 }
 
+// Format a yyyy-mm-dd value as a short human-readable date, e.g. "Mar 5".
 function formatProgressDate(value) {
     const date = new Date(`${value}T00:00:00`);
 
@@ -61,6 +62,7 @@ function formatProgressDate(value) {
         : new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date);
 }
 
+// Wire up a task form's progress-date summaries and the create-modal's submit button state.
 function initializeTaskForm(form) {
     if (form.dataset.initialized === 'true') {
         return;
@@ -95,6 +97,7 @@ function initializeTaskForm(form) {
     }
 }
 
+// Wire up expand/collapse toggles for a task's progress timeline details.
 function initializeProgressToggles(container = document) {
     container.querySelectorAll('[data-progress-toggle]').forEach((toggle) => {
         if (toggle.dataset.initialized === 'true') {
@@ -118,6 +121,7 @@ function initializeProgressToggles(container = document) {
 document.querySelectorAll('.task-form').forEach(initializeTaskForm);
 initializeProgressToggles();
 
+// Intercept delete-task form submissions and confirm via SweetAlert2 before actually deleting.
 document.addEventListener('submit', async (event) => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement) || !form.matches('[data-delete-form]')) {
@@ -173,6 +177,7 @@ $('[data-task-tooltip]').tooltip({
     template: '<div class="tooltip task-onboarding-tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>',
 });
 
+// Collapse the mobile sidebar overlay.
 function closeSidebar() {
     document.body.classList.remove('sidebar-open');
     sidebarToggle?.setAttribute('aria-expanded', 'false');
@@ -191,6 +196,7 @@ if (editTaskModal && editModalContent) {
     });
 }
 
+// Build the edit-task URL carrying the current filters and the return-to context into the modal request.
 function getTaskEditModalUrl(href) {
     const editUrl = new URL(href, window.location.origin);
     const currentUrl = new URL(window.location.href);
@@ -215,6 +221,7 @@ function getTaskEditModalUrl(href) {
     return editUrl;
 }
 
+// Fetch a task's edit form and render it inside the edit modal, aborting any in-flight request.
 async function openTaskEditModal(href) {
     if (!editTaskModal || !editModalContent) {
         window.location.assign(href);
@@ -260,6 +267,7 @@ async function openTaskEditModal(href) {
     }
 }
 
+// Remove any validation error messages previously rendered on an edit form.
 function clearEditFormErrors(form) {
     form.querySelectorAll('[data-edit-field-error]').forEach((feedback) => {
         const field = Array.from(form.elements).find((element) => element.name === feedback.dataset.editFieldError);
@@ -278,6 +286,7 @@ function clearEditFormErrors(form) {
     });
 }
 
+// Render server-side validation errors inline next to their fields on an edit form.
 function showEditFormErrors(form, errors) {
     clearEditFormErrors(form);
 
@@ -309,6 +318,7 @@ function showEditFormErrors(form, errors) {
     form.querySelector('.is-invalid')?.focus({ preventScroll: true });
 }
 
+// Submit the in-modal edit form via AJAX, showing inline errors or reloading on success.
 editTaskModal?.addEventListener('submit', async (event) => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement) || !form.classList.contains('task-form')) {
@@ -361,6 +371,7 @@ editTaskModal?.addEventListener('submit', async (event) => {
     }
 });
 
+// Intercept clicks on edit-task links so they open the in-page modal instead of navigating.
 document.addEventListener('click', (event) => {
     if (!(event.target instanceof Element)) {
         return;
@@ -426,6 +437,7 @@ document.querySelector('[data-focus-search]')?.addEventListener('click', () => {
     searchInput?.focus({ preventScroll: true });
 });
 
+// Close the search popover when clicking outside of it.
 document.addEventListener('click', (event) => {
     const searchForm = document.querySelector('[data-search-popover]');
 
@@ -439,6 +451,7 @@ document.addEventListener('click', (event) => {
     }
 });
 
+// Show or hide the status/due filter popover.
 function setFilterPopoverOpen(isOpen) {
     if (!filterToggle || !filterPopover) {
         return;
@@ -513,6 +526,7 @@ document.addEventListener('click', (event) => {
     }
 });
 
+// Show or hide the export-format popover.
 function setExportPopoverOpen(isOpen) {
     if (!exportToggle || !exportPopover) {
         return;
@@ -547,6 +561,7 @@ document.querySelectorAll('[data-export-action]').forEach((button) => {
     });
 });
 
+// Fetch the filtered task rows/columns used to build xlsx and PDF exports.
 async function loadExportData(url) {
     const response = await fetch(url, {
         headers: { Accept: 'application/json' },
@@ -558,6 +573,7 @@ async function loadExportData(url) {
     return response.json();
 }
 
+// Trigger a browser download for an in-memory file blob.
 function downloadBlob(file, filename) {
     const downloadUrl = URL.createObjectURL(file);
     const link = document.createElement('a');
@@ -569,6 +585,7 @@ function downloadBlob(file, filename) {
     window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
 }
 
+// Show a generic export-failure alert.
 function showExportError() {
     Swal.fire({
         icon: 'error',
@@ -579,6 +596,7 @@ function showExportError() {
     });
 }
 
+// Build and download the current task list as an xlsx workbook.
 document.querySelector('[data-export-xlsx]')?.addEventListener('click', async (event) => {
     const button = event.currentTarget;
     button.disabled = true;
@@ -609,6 +627,7 @@ document.querySelector('[data-export-xlsx]')?.addEventListener('click', async (e
     }
 });
 
+// Build and download the current task list as a PDF table.
 document.querySelector('[data-export-pdf]')?.addEventListener('click', async (event) => {
     const button = event.currentTarget;
     button.disabled = true;
@@ -636,6 +655,7 @@ document.querySelector('[data-export-pdf]')?.addEventListener('click', async (ev
     }
 });
 
+// Close the sidebar and any open popovers when the user presses Escape.
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         closeSidebar();
@@ -657,6 +677,7 @@ document.addEventListener('keydown', (event) => {
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 let sortableInstance = null;
 
+// Enable drag-and-drop task reordering on the list view, persisting the new order via AJAX.
 function initializeSortable(container = document) {
     sortableInstance?.destroy();
     sortableInstance = null;
@@ -733,6 +754,7 @@ initializeSortable();
 
 let calendarInstance = null;
 
+// Mount the FullCalendar week/month view and wire up its toolbar, add-task, and edit interactions.
 function initializeCalendar(container = document) {
     calendarInstance?.destroy();
     calendarInstance = null;
@@ -932,6 +954,7 @@ initializeCalendar();
 
 let workspaceNavigationRequest = null;
 
+// Sync the page title, filter popover, search form, and export links after a workspace navigation swap.
 function updateWorkspaceHeader(nextDocument, filterWasOpen, filterScrollTop) {
     const nextTitle = nextDocument.querySelector('.topbar-title');
     const currentTitle = document.querySelector('.topbar-title');
@@ -1001,6 +1024,7 @@ function updateWorkspaceHeader(nextDocument, filterWasOpen, filterScrollTop) {
     }
 }
 
+// Fetch a workspace page and swap its main content in place, avoiding a full page reload.
 async function navigateWorkspace(href, { pushHistory = true } = {}) {
     const targetUrl = new URL(href, window.location.href);
     if (targetUrl.origin !== window.location.origin) {
@@ -1080,6 +1104,7 @@ async function navigateWorkspace(href, { pushHistory = true } = {}) {
     }
 }
 
+// Intercept clicks on view-switch links (list/grid/calendar) to navigate without a full reload.
 document.addEventListener('click', (event) => {
     if (!(event.target instanceof Element)) {
         return;
@@ -1104,6 +1129,7 @@ document.addEventListener('click', (event) => {
     }
 });
 
+// Submit the global search form via workspace navigation instead of a full page load.
 document.addEventListener('submit', (event) => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement) || !form.matches('.global-search')) {
@@ -1116,6 +1142,7 @@ document.addEventListener('submit', (event) => {
     navigateWorkspace(targetUrl.href);
 });
 
+// Re-render the workspace content when the user navigates with the browser's back/forward buttons.
 window.addEventListener('popstate', () => {
     navigateWorkspace(window.location.href, { pushHistory: false });
 });
