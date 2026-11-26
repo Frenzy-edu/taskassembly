@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="A focused workspace for managing tasks.">
-    <title>@yield('title', 'TaskFlow') · TaskFlow</title>
+    <title>@yield('title', 'TaskAssembly') · TaskAssembly</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ asset('css/taskflow.css') }}">
@@ -44,7 +44,7 @@
 
                 <div class="topbar-heading">
                     @unless ($workspacePage)
-                        <p class="topbar-eyebrow">TaskFlow workspace</p>
+                        <p class="topbar-eyebrow">TaskAssembly workspace</p>
                     @endunless
                     <h1 class="topbar-title">{{ trim($__env->yieldContent('page-title', 'Dashboard')) }}</h1>
                 </div>
@@ -160,7 +160,7 @@
                 @yield('content')
             </main>
 
-            <footer class="app-footer">TaskFlow · Stay focused on what matters.</footer>
+            <footer class="app-footer">TaskAssembly · Stay focused on what matters.</footer>
         </div>
     </div>
 

@@ -9,12 +9,12 @@
         <a
             class="sidebar-brand"
             href="{{ route('dashboard') }}"
-            aria-label="{{ $calendarSidebar ? 'TaskAssembly dashboard' : 'TaskFlow dashboard' }}"
+            aria-label="TaskAssembly dashboard"
         >
             <span class="sidebar-brand-icon">
                 <i class="bi bi-check2" aria-hidden="true"></i>
             </span>
-            <span>{{ $calendarSidebar ? 'TaskAssembly' : 'TaskFlow' }}</span>
+            <span>TaskAssembly</span>
             @if ($calendarSidebar)
                 <i class="bi bi-chevron-down sidebar-brand-caret" aria-hidden="true"></i>
             @endif

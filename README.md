@@ -1,6 +1,6 @@
-# TaskFlow
+# TaskAssembly
 
-TaskFlow is a single Laravel application for managing personal tasks. Laravel renders the pages with Blade and uses Eloquent for database access. Bootstrap 4.6 (loaded from a CDN, no build step) provides the responsive UI; SweetAlert2 handles confirmations and feedback.
+TaskAssembly is a single Laravel application for managing personal tasks. Laravel renders the pages with Blade and uses Eloquent for database access. Bootstrap 4.6 (loaded from a CDN, no build step) provides the responsive UI; SweetAlert2 handles confirmations and feedback.
 
 ## Approach
 

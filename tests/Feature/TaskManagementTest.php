@@ -249,7 +249,7 @@ class TaskManagementTest extends TestCase
                 ->assertSee('Incomplete tasks')
                 ->assertSee('Completed tasks')
                 ->assertSee('Due next')
-                ->assertDontSee('TaskFlow workspace')
+                ->assertDontSee('TaskAssembly workspace')
                 ->assertDontSee('Task management')
                 ->assertDontSee('Add New Task');
         }
