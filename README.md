@@ -2,6 +2,14 @@
 
 TaskFlow is a single Laravel application for managing personal tasks. Laravel renders the pages with Blade and uses Eloquent for database access. Bootstrap 4.6 (loaded from a CDN, no build step) provides the responsive UI; SweetAlert2 handles confirmations and feedback.
 
+## Approach
+
+- Server-rendered Blade over a separate frontend/API: the task list is simple enough that a JSON API and client-side framework would add complexity without adding value.
+- CDN-delivered Bootstrap 4, jQuery, FullCalendar, SortableJS, SweetAlert2, ExcelJS, and jsPDF instead of a bundler: no Node/npm build step is required to run or deploy the app, which keeps local setup to just PHP and Composer.
+- Tasks are route-bound by a generated slug rather than their numeric id, for cleaner URLs; numeric ids still resolve for backward compatibility.
+- Status is a required field (`pending`/`completed`, matching the spec) with `in_progress` added as an optional third state for finer-grained tracking — the original two states are unaffected.
+- Search, status/due filtering, pagination, and drag-and-drop ordering are implemented as the specified bonus features.
+
 ## Project structure
 
 This is a single Laravel application at the repository root: Blade templates, static assets in `public/js` and `public/css`, migrations, seeders, and tests. There is no JS bundler — Bootstrap 4, jQuery, FullCalendar, SortableJS, SweetAlert2, ExcelJS, and jsPDF are all loaded via CDN `<script>`/`<link>` tags in `resources/views/layouts/app.blade.php`.
@@ -17,48 +25,40 @@ There is no separate frontend app or JSON API. Task creation is available from a
 
 ## First-time setup
 
-Run these commands from the project root in PowerShell:
+Requires PHP 8.3+ and Composer on your `PATH`. Run these commands from the project root:
 
-```powershell
+```bash
 composer install
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+cp .env.example .env            # Windows (PowerShell): Copy-Item .env.example .env
 php artisan key:generate
-if (-not (Test-Path .\database\database.sqlite)) { New-Item -ItemType File .\database\database.sqlite | Out-Null }
+touch database/database.sqlite  # Windows (PowerShell): New-Item -ItemType File .\database\database.sqlite
 php artisan migrate --seed
 ```
 
 The seeder adds sample tasks for development. To start with an empty task list, use `php artisan migrate` without `--seed`.
 
-### Windows workspace PHP runtime
-
-If PHP is not on your `PATH`, run these lines in the backend terminal before the PHP commands:
-
-```powershell
-$phpDir = "$env:LOCALAPPDATA\TaskManagerToolchain\php-8.5.13"
-$env:PHPRC = $phpDir
-$env:Path = "$phpDir;$env:Path"
-```
-
-On another machine, install PHP and Composer as listed under Requirements. If `composer` is not recognized in this workspace, run this from the project root after setting `$phpDir` above:
-
-```powershell
-& "$phpDir\php.exe" "$env:LOCALAPPDATA\TaskManagerToolchain\composer.phar" install
-```
-
 ## Run locally
 
-From `D:\TaskManager`:
-
-```powershell
-$phpDir = "$env:LOCALAPPDATA\TaskManagerToolchain\php-8.5.13"
-$env:PHPRC = $phpDir
-$env:Path = "$phpDir;$env:Path"
+```bash
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-If PHP is already on `PATH`, the first three lines are not needed.
-
 Open **http://127.0.0.1:8000**. There is no separate asset-build step or second terminal — `public/js/app.js` and `public/css/taskflow.css` are served as-is, and the rest of the frontend libraries load straight from a CDN.
+
+<details>
+<summary>Windows workspace note (this dev machine only)</summary>
+
+This machine's local PHP/Composer toolchain isn't on `PATH` by default. If `php`/`composer` aren't recognized here, run this first:
+
+```powershell
+$phpDir = "$env:LOCALAPPDATA\TaskManagerToolchain\php-8.5.13"
+$env:PHPRC = $phpDir
+$env:Path = "$phpDir;$env:Path"
+```
+
+This is specific to this workstation's setup and isn't needed on a machine with PHP already installed normally.
+
+</details>
 
 ## Features
 
@@ -99,9 +99,9 @@ Enable PHP's `pdo_mysql` extension, then run `php artisan config:clear` and `php
 
 ## Tests
 
-```powershell
+```bash
 php artisan test
-vendor\bin\pint --test
+vendor/bin/pint --test
 ```
 
 ## Assumptions
