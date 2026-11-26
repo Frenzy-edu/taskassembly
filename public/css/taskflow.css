@@ -2367,7 +2367,7 @@ textarea:focus-visible {
 }
 
 .task-form-modal .task-form .form-group:first-of-type {
-    margin-bottom: 3px;
+    margin-bottom: 16px;
 }
 
 .task-form-modal .task-form .form-group:first-of-type .form-control {
