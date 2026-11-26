@@ -165,9 +165,9 @@ class TaskController extends Controller
         if (in_array($request->validated('format'), ['xlsx', 'pdf'], true)) {
             return response()->json([
                 'columns' => ['Title', 'Description', 'Created On', 'Start Date', 'Due Date', 'Status'],
-                'rows' => $tasks->get()->map(static fn (Task $task): array => [
-                    $task->title,
-                    $task->description ?? '',
+                'rows' => $tasks->get()->map(fn (Task $task): array => [
+                    $this->escapeForSpreadsheet($task->title),
+                    $this->escapeForSpreadsheet($task->description ?? ''),
                     $task->created_at->format('Y-m-d H:i:s'),
                     $task->start_date?->toDateString() ?? '',
                     $task->due_date?->toDateString() ?? '',
@@ -176,7 +176,7 @@ class TaskController extends Controller
             ]);
         }
 
-        return response()->streamDownload(static function () use ($tasks): void {
+        return response()->streamDownload(function () use ($tasks): void {
             $output = fopen('php://output', 'w');
             if ($output === false) {
                 throw new \RuntimeException('Unable to open the task export stream.');
@@ -189,8 +189,8 @@ class TaskController extends Controller
             fputcsv($output, ['Title', 'Description', 'Created On', 'Start Date', 'Due Date', 'Status'], ',', '"', '');
             foreach ($tasks->cursor() as $task) {
                 fputcsv($output, [
-                    $task->title,
-                    $task->description ?? '',
+                    $this->escapeForSpreadsheet($task->title),
+                    $this->escapeForSpreadsheet($task->description ?? ''),
                     $task->created_at->format('Y-m-d H:i:s'),
                     $task->start_date?->toDateString() ?? '',
                     $task->due_date?->toDateString() ?? '',
@@ -477,6 +477,14 @@ class TaskController extends Controller
                 })
                 ->count(),
         ];
+    }
+
+    // Neutralize spreadsheet formula injection: a cell starting with =, +, -, @, tab, or CR can be
+    // interpreted as a formula by Excel/Sheets/LibreOffice when the export is opened, so prefix a
+    // single quote to force it to be read as plain text while keeping the visible value unchanged.
+    private function escapeForSpreadsheet(string $value): string
+    {
+        return preg_match('/^[=+\-@\t\r]/', $value) === 1 ? "'".$value : $value;
     }
 
     // Extract the current request's filter query params for reuse in generated route URLs.
