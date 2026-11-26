@@ -182,7 +182,11 @@ class TaskController extends Controller
                 throw new \RuntimeException('Unable to open the task export stream.');
             }
 
-            fputcsv($output, ['Title', 'Description', 'Created On', 'Start Date', 'Due Date', 'Status'], ',', '"', '\\');
+            // UTF-8 BOM plus an explicit separator hint so Excel reliably opens this as columns
+            // instead of dumping every row into column A on locales where ";" is the default list separator.
+            fwrite($output, "\xEF\xBB\xBF");
+            fwrite($output, "sep=,\r\n");
+            fputcsv($output, ['Title', 'Description', 'Created On', 'Start Date', 'Due Date', 'Status'], ',', '"', '');
             foreach ($tasks->cursor() as $task) {
                 fputcsv($output, [
                     $task->title,
@@ -191,7 +195,7 @@ class TaskController extends Controller
                     $task->start_date?->toDateString() ?? '',
                     $task->due_date?->toDateString() ?? '',
                     ucwords(str_replace('_', ' ', $task->status)),
-                ], ',', '"', '\\');
+                ], ',', '"', '');
             }
 
             fclose($output);
