@@ -21,36 +21,6 @@ html {
     scrollbar-gutter: stable;
 }
 
-@view-transition {
-    navigation: auto;
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-    animation-duration: 140ms;
-    animation-timing-function: ease-out;
-}
-
-::view-transition-old(root) {
-    animation-name: taskflow-page-out;
-}
-
-::view-transition-new(root) {
-    animation-name: taskflow-page-in;
-}
-
-@keyframes taskflow-page-out {
-    to {
-        opacity: 0;
-    }
-}
-
-@keyframes taskflow-page-in {
-    from {
-        opacity: 0;
-    }
-}
-
 body {
     min-width: 320px;
     background: var(--canvas);
@@ -1755,11 +1725,6 @@ textarea:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    ::view-transition-old(root),
-    ::view-transition-new(root) {
-        animation-duration: 1ms;
-    }
-
     *,
     *::before,
     *::after {
